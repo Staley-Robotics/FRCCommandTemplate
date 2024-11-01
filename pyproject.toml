@@ -1,0 +1,14 @@
+#
+# Use this configuration file to control what RobotPy packages are installed
+# on your RoboRIO
+#
+
+[tool.robotpy]
+
+# Version of robotpy this project depends on
+robotpy_version = "2025.0.0b1"
+
+# Which extra RobotPy components should be installed
+robotpy_extras = [
+    "commands2"
+]
