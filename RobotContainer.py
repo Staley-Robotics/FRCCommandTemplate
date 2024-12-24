@@ -1,42 +1,48 @@
-from commands2 import Command
-from commands2.button import CommandXboxController
-import commands2.cmd as cmd
+# FRC Imports
 from wpilib import SendableChooser, SmartDashboard
+from commands2 import Command, cmd
 
-from commands.SampleCommand import SampleCommand
-from subsystems.SampleSubsystem import SampleSubsystem
+# Local Imports
+from subsystems import SampleSubsystem
+from commands import SampleCommand
+from util import FalconXboxController
 
 class RobotContainer:
+    """
+    RobotContainer is the Initial Container for an FRC Robot
+    """
     # Variable Declaration
-    m_autoChooser:SendableChooser = None
+    __autoChooser:SendableChooser = SendableChooser()
 
     # Initialization
     def __init__(self):
+        """
+        Initializes RobotContainer
+        """
         # Driver Controller
-        self.m_driver1 = CommandXboxController( 0 )
+        driver1 = FalconXboxController( 0 )
 
         # Declare Subsystems
-        self.m_subsys = SampleSubsystem( 0 )
+        sysSample = SampleSubsystem( 0 )
 
         # Commands
-        self.leftX = SampleCommand(self.m_subsys, self.m_driver1.getLeftX )
-        self.rightX = SampleCommand(self.m_subsys, self.m_driver1.getRightX )
+        cmdSampleLeft = SampleCommand(sysSample, driver1.getLeftX )
+        cmdSampleRight = SampleCommand(sysSample, driver1.getRightX )
 
         # Autonomous Chooser
-        self.m_autoChooser = SendableChooser()
-        self.m_autoChooser.setDefaultOption( "1 - None", cmd.none() )
-        SmartDashboard.putData( "Autonomous Mode", self.m_autoChooser )
+        self.__autoChooser.setDefaultOption( "1 - None", cmd.none() )
+        SmartDashboard.putData( "Autonomous Mode", self.__autoChooser )
 
         # Default Commands
-        self.m_subsys.setDefaultCommand( self.leftX )
+        sysSample.setDefaultCommand( cmdSampleLeft )
 
         # Driver Controller Button Binding
-        self.m_driver1.a().whileTrue( self.rightX )
+        driver1.a().whileTrue( cmdSampleRight )
 
     # Get Autonomous Command
     def getAutonomousCommand(self) -> Command:
-        chooserValue = self.m_autoChooser.getSelected()
-        if type(chooserValue) == Command:
-            return chooserValue
-        else:
-            return cmd.none()
+        """
+        Get the Autonomous Command that is currently selected in the AutoChooser Dropdown on the Shuffleboard / SmartDashboards
+        """
+        chooserValue = self.__autoChooser.getSelected()
+        return chooserValue if isinstance( chooserValue, Command ) else cmd.none()

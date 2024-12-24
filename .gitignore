@@ -162,3 +162,5 @@ cython_debug/
 # FRC Simulation
 networktables*.json
 simgui*.json
+ctre_sim/
+.logs/*
