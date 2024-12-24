@@ -1,29 +1,65 @@
-from wpilib import TimedRobot
+# Python Imports
+from pathlib import Path
+
+# FRC Imports
+from wpilib import DriverStation, DataLogManager, RobotBase, TimedRobot
 from commands2 import Command, CommandScheduler
+
+# Local Imports
 from RobotContainer import RobotContainer
+from util import FalconLogger
 
 class MyRobot(TimedRobot):
     # Variable Declaration
-    m_robotContainer:RobotContainer = None
-    m_autonomousCommand:Command = None
+    __robotContainer:RobotContainer = None
+    __autoCmd:Command = None
+    __logger:FalconLogger = None
 
     # Initialization
     def robotInit(self):
-        self.m_robotContainer = RobotContainer()
+        # Disable Joystick Notifications
+        DriverStation.silenceJoystickConnectionWarning(True)
+
+        # Start Logging using the built in DataLogManager
+        logDir = '/U/logs' if RobotBase.isReal() else '.logs'
+        DataLogManager.start( dir=(logDir if Path(logDir).is_dir() else ''), period=1.0 )
+        DriverStation.startDataLog( DataLogManager.getLog() )
+        
+        # Built The Robot
+        self.__robotContainer = RobotContainer()
+        self.__logger = FalconLogger(False)
 
     # Periodic Loop / All Modes
     def robotPeriodic(self):
+        # Mark the Current Timestamp for Logging
+        self.__logger.setTime()
+
+        # Run the CommandScheduler Loop
         CommandScheduler.getInstance().run()
+
+        # Write the Log Results
+        try:
+            self.__logger.writeLog()
+        except:
+            print("WARNING! FalconLogger Cannot Write to Log!")
 
     # Autonomous Mode
     def autonomousInit(self):
-        self.m_autonomousCommand = self.m_robotContainer.getAutonomousCommand()
+        # Start the Autonomous Package
+        try:
+            self.__autoCmd = self.__robotContainer.getAutonomousCommand()
+            self.__autoCmd.schedule()
+        except:
+            print("WARNING! getAutonomousCommand failed!")
     
     def autonomousPeriodic(self): pass
 
     def autonomousExit(self):
-        if self.m_autonomousCommand != None:
-            self.m_autonomousCommand.cancel()
+        # End the Autonomous Package
+        try:
+            self.__autoCmd.cancel()
+        except:
+            pass
 
     # Teleop Mode
     def teleopInit(self): pass
