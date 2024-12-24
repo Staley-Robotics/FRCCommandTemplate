@@ -163,4 +163,4 @@ cython_debug/
 networktables*.json
 simgui*.json
 ctre_sim/
-.logs/*
+.logs/*.wpilog
