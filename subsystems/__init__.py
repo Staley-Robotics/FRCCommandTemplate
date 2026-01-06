@@ -1,7 +1,7 @@
 # Imports
-from .SampleSubsystem import *
+from .ExampleSubsystem import *
 
 # Classes to Import
 __all__ = [
-    "SampleSubsystem"
+    "ExampleSubsystem"
 ]

@@ -15,7 +15,6 @@ class MyRobot(TimedRobot):
     __autoCmd:Command = None
     __logger:FalconLogger = None
 
-    # Initialization
     def robotInit(self):
         # Disable Joystick Notifications
         DriverStation.silenceJoystickConnectionWarning(True)
@@ -25,11 +24,11 @@ class MyRobot(TimedRobot):
         DataLogManager.start( dir=(logDir if Path(logDir).is_dir() else ''), period=1.0 )
         DriverStation.startDataLog( DataLogManager.getLog() )
         
-        # Built The Robot
+        # Build The Robot
         self.__robotContainer = RobotContainer()
         self.__logger = FalconLogger(False)
 
-    # Periodic Loop / All Modes
+    # Periodic Loop for All Modes
     def robotPeriodic(self):
         # Mark the Current Timestamp for Logging
         self.__logger.setTime()
@@ -40,10 +39,9 @@ class MyRobot(TimedRobot):
         # Write the Log Results
         try:
             self.__logger.writeLog()
-        except:
-            print("WARNING! FalconLogger Cannot Write to Log!")
+        except Exception as err:
+            print(f"WARNING! FalconLogger Cannot Write to Log! Recieved error '{err}' of type '{type(err)}")
 
-    # Autonomous Mode
     def autonomousInit(self):
         # Start the Autonomous Package
         try:

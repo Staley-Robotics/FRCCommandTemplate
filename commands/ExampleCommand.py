@@ -1,12 +1,12 @@
 import typing
 
 from commands2 import Command, Subsystem
-from subsystems.SampleSubsystem import SampleSubsystem
+from subsystems.ExampleSubsystem import ExampleSubsystem
 
-class SampleCommand(Command):
+class ExampleCommand(Command):
     # Variable Declaration
-    m_subsystem:SampleSubsystem = None
-    m_getValue:typing.Callable[[],float] = lambda: 0.0
+    subsystem:ExampleSubsystem = None
+    getValue:typing.Callable[[],float] = lambda: 0.0
     
     # Initialization
     def __init__( self,
@@ -14,27 +14,22 @@ class SampleCommand(Command):
                   myValue: typing.Callable[[], float] = lambda: 0.0
                 ) -> None:
         # Command Attributes
-        self.m_subsystem:SampleSubsystem = mySubsystem
-        self.m_getValue = myValue
-        self.setName( "SampleCommand" )
+        self.subsystem:ExampleSubsystem = mySubsystem
+        self.getValue = myValue
+        self.setName( "ExampleCommand" )
         self.addRequirements( mySubsystem )
 
-    # On Start
     def initialize(self) -> None:
         pass
 
-    # Periodic
     def execute(self) -> None:
-        self.m_subsystem.setSetpoint( self.m_getValue() )
+        self.subsystem.setSetpoint( self.getValue() )
 
-    # On End
     def end(self, interrupted:bool) -> None:
         pass
 
-    # Is Finished
     def isFinished(self) -> bool:
         return False
 
-    # Run When Disabled
     def runsWhenDisabled(self) -> bool:
         return False
