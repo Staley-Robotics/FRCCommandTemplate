@@ -5,7 +5,13 @@ from typing import Any
 from wpilib import RobotController, RobotBase
 from ntcore import NetworkTableInstance, NetworkTable, StructPublisher, _setNow
 
+from phoenix6.hardware import TalonFX
 from rev import SparkMax
+
+class LoggedObject:
+    def __init__(self, key:str, obj:TalonFX | SparkMax):
+        self.key = key
+        self.obj = obj
 
 class FalconLogger:
     __outputBase:str = "Real"
@@ -13,8 +19,7 @@ class FalconLogger:
     __publishers:dict = {}
     __inputs:dict = {}
     __outputs:dict = {}
-    __LOGGABLE_OBJECTS:set[type] = {SparkMax}
-    __logged_objects:dict = {}
+    __loggedObjects:list[LoggedObject] = [] # currently only implemented for TalonFX, more should be added in future
 
     def __init__(self, isReplay:bool = False) -> None:
         if RobotBase.isSimulation():
@@ -25,24 +30,47 @@ class FalconLogger:
 
     def setTime(self) -> None:
         _setNow( RobotController.getFPGATime() )
+    
+    def __updateLoggedObjects(self) -> None:
+        #HEY: if you're implementing a new object type in here, please remember to update the type metedata around this file
+        for logged_obj in self.__loggedObjects:
+            match logged_obj:
+                case SparkMax():
+                    self.logInput(logged_obj.key + "/set speed", logged_obj.obj.get())
+                    self.logInput(logged_obj.key + "/duty cycle output", logged_obj.obj.getAppliedOutput())
+                    self.logInput(logged_obj.key + "/converted position", logged_obj.obj.getAbsoluteEncoder().getPosition())
+                    self.logInput(logged_obj.key + "/converted velocity", logged_obj.obj.getAbsoluteEncoder().getVelocity())
+                    self.logInput(logged_obj.key + "/output current - amps", logged_obj.obj.getOutputCurrent())
+                    self.logInput(logged_obj.key + "/temp - c", logged_obj.obj.getMotorTemperature())
+                case TalonFX():
+                    #NOTE: this is likely not the best way to log data from phoenix hardware, but is still used for consistency
+                    self.logInput(logged_obj.key + "/rotor velocity", TalonFX.get_rotor_velocity().value)
+                    self.logInput(logged_obj.key + "/converted velocity", TalonFX.get_velocity().value)
+                    self.logInput(logged_obj.key + "/rotor position", TalonFX.get_rotor_position().value)
+                    self.logInput(logged_obj.key + "/converted position", TalonFX.get_position().value)
+                    self.logInput(logged_obj.key + "/output current - amps", TalonFX.get_stator_current().value)
+                    self.logInput(logged_obj.key + "/temp - c", TalonFX.get_device_temp().value)
+                case _:
+                    print(f"Unsupported object {logged_obj} added to FalconLogger's loggedInputs")
 
     def writeLog(self) -> None:
-        """
-        Commits all cached logs to NetworkTables
-        """
-        self.__readLoggedObjectsToInputs()
-
+        '''
+        Update logged objects, then write all Inputs and Outputs to NetworkTables
+        '''
+        self.__updateLoggedObjects()
         self.__writeLog( "Logging", self.__inputs )
         self.__writeLog( f"{self.__outputBase}Outputs", self.__outputs )     
 
     def __writeLog(self, key:str, logData:dict) -> None:
-        """
-        Loop Through Records Currently In the Log Data
-        Commit Logs to Network Tables
-        """
+        '''
+        Write param logData to NetworkTables
+        '''
+        # Loop Through Records Currently In the Log Data
+        # Commit Logs to Network Tables
         for k, v in logData.items():
             path = f"{key}/{k}"
             match v:
+                # Arrays of Standard Types
                 case list():
                     match v[0]:
                         case bool():
@@ -59,13 +87,14 @@ class FalconLogger:
                                 pub.set( v )
                             else:
                                 print( f"Other type: {type(v)} => {path}: {v}" )
+                # Standard single types
                 case bool():
                     self.__tbl.putBoolean( path, v )
                 case str():
                     self.__tbl.putString( path, v )
                 case float() | int():
                     self.__tbl.putNumber( path, v )
-                case _:
+                case _: #
                     if v.WPIStruct != None:
                         if path not in self.__publishers:
                             self.__publishers.update( {path: self.__tbl.getStructTopic( path, type(v) ).publish() } )
@@ -76,50 +105,31 @@ class FalconLogger:
         
         # Clear the Log Data Cache
         logData.clear()
-    
-    def __readLoggedObjectsToInputs(self) -> None:
-        """
-        reads current data from all logged objects and adds to self.__inputs
-        """
-        for key, obj in self.__logged_objects.items():
-            match obj:
-                case SparkMax():
-                    self.logInput(f"{key}/MotorInput", obj.get()) # current speed of motor
-                    self.logInput(f"{key}/MotorOutput", obj.getAppliedOutput())
-                    self.logInput(f"{key}/MotorPosition_r", obj.getPosition())
-                    self.logInput(f"{key}/MotorVelocity_rpm", obj.getVelocity())
-                    self.logInput(f"{key}/MotorCurrent_a", obj.getOutputCurrent())
-                    self.logInput(f"{key}/MotorTemp_c", obj.getMotorTemperature())
-                case _:
-                    raise TypeError(f"Object of type {type(obj)} was added to LoggedObjects, but has not been implemented")
-    
-    @classmethod
-    def addLoggedObject(self, key:str, value:Any) -> None:
-        """
-        add or update an object to log its hardware inputs
-
-        :param obj: must be a supported object type.
-        currently supported types:
-            - SparkMax
-        """
-        if type(value) not in self.__LOGGABLE_OBJECTS:
-            raise TypeError(f"'{type(value)}' is not a supported type for automatic logging, either log its contents manually or implement yourself it in FalconLogger")
-        self.__logged_objects.update({ key: value })
 
     @classmethod
     def logInput(self, key:str, value:Any) -> None:
-        """
-        add or update a data input to be logged
+        '''
+        Add a new input data point to be logged
 
-        should be used exclusively for raw data from hardware inputs
-        """
+        Use only for direct inputs from hardware (e.g. limit switch state, motor temp or speed, etc.)
+        Any values with calculations should be logged as outputs
+        '''
         self.__inputs.update({ key: value })
 
     @classmethod
     def logOutput(self, key:str, value:Any) -> None:
-        """
-        add or update a data output to be logged
+        '''
+        Add a new output data point to be logged
 
-        should be used exclusively for calculated values
-        """
+        Use only for outputs from calculations (e.g. desired positions, estimated positions, etc.)
+        Any values directly from hardware should be logged as inputs
+        '''
         self.__outputs.update( {key: value} )
+    
+    @classmethod
+    def addLoggedObject(self, key:str, value:TalonFX | SparkMax) -> None:
+        '''
+        Add a new object to have its inputs automatically logged, only needs to be called once
+        '''
+        # I dont feel like deduplicating so be careful, ig
+        self.__loggedObjects.append(LoggedObject(key, value))

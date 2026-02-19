@@ -2,20 +2,20 @@ from commands2 import Subsystem
 from wpilib import RobotState
 from ntcore import NetworkTable, NetworkTableInstance
 
+from util import FalconLogger
+
 class ExampleSubsystem(Subsystem):
     # Variable Type Declaration
     value:float = 0.0
     system:int = None
-    logging:NetworkTable = None
 
     def __init__(self, sysId:int) -> None:
         self.system = sysId
         self.value = 0.0
-        self.logging = NetworkTableInstance.getDefault().getTable("/Logging/ExampleSubsystem")
 
     def periodic(self) -> None:
         # Logging: Write Current Subsystem State
-        self.logging.putNumber( "SubsystemData", 0.0 )
+        FalconLogger.logInput( "/ExampleSubsystem/exampleMeasurement", 0.0 )
 
         # Run Subsystem: Set New State To Subsystem
         if RobotState.isDisabled():
@@ -24,8 +24,7 @@ class ExampleSubsystem(Subsystem):
             self.run()
         
         # Logging: Write Post Operation Information
-        self.logging.putNumber( "Setpoint", self.getSetpoint() )
-        self.logging.putNumber( "Measured", self.system )
+        FalconLogger.logOutput( "/ExampleSubsystem/setpoint", self.getSetpoint() )
 
     def run(self) -> None:
         pass
@@ -36,6 +35,8 @@ class ExampleSubsystem(Subsystem):
     def setSetpoint(self, value:float) -> None:
         """
         Set Desired State value
+        NOTE: in a real subsystem, try to use a specific term like 'setSpeed' or 'setDesiredPosition', 'setSetPosition' would also be acceptable, but is less readable
+        - make sure to use 'Desired' or 'Set' when using closed-loop control to avoid confusion
         """
         self.value = value
 

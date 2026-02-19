@@ -1,5 +1,16 @@
-Staley Robotics - Command Based Architecture Template
+This is a Staley Robotics Programming Project using the FRCCommandTemplate
 
-ChangeLog
-- 2024-12-24 - Updated Template for Start of 2025 Season
-- 2024-11-01 - Initial Commit - Created Template for the 2025 Beta Testing
+FRCCommand Template Featured elements:
+- Base setup for Command Based robot
+- Example Command & Subsystem
+- *setup.sh* which can be run to
+    - setup the python virtual environment
+    - install the pip requirements
+    - sync robotpy
+- *build.py* which be run to
+    - automatically create __init__.py files in standard directories to ease python importing
+- Custom utils including:
+    - FalconLogger
+    - FalconXboxController
+    - FalconDefaultCommand (for now, pending evaluation)
+    - (planned, not currently available) Tunables
