@@ -4,6 +4,7 @@ from pathlib import Path
 # FRC Imports
 from wpilib import DriverStation, DataLogManager, RobotBase, TimedRobot
 from commands2 import Command, CommandScheduler
+from phoenix6.signal_logger import SignalLogger
 
 # Local Imports
 from RobotContainer import RobotContainer
@@ -23,6 +24,12 @@ class MyRobot(TimedRobot):
         logDir = '/U/logs' if RobotBase.isReal() else '.logs'
         DataLogManager.start( dir=(logDir if Path(logDir).is_dir() else ''), period=1.0 )
         DriverStation.startDataLog( DataLogManager.getLog() )
+
+        # handle phoenix logs
+        if RobotBase.isSimulation() or not RobotBase.isReal():
+            if not Path('.logs/ctre').is_dir():
+                Path('.logs/ctre').mkdir(parents=True, exist_ok=True)
+            SignalLogger.set_path('.logs/ctre')
         
         # Build The Robot
         self.__robotContainer = RobotContainer()
