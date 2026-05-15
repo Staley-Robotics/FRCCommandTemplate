@@ -12,5 +12,4 @@ FRCCommand Template Featured elements:
 - Custom utils including:
     - FalconLogger
     - FalconXboxController
-    - FalconDefaultCommand (for now, pending evaluation)
-    - (planned, not currently available) Tunables
+    - Tunables

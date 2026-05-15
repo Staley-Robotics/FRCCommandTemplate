@@ -5,13 +5,13 @@ from ntcore import NetworkTable, NetworkTableInstance
 from util import FalconLogger
 
 class ExampleSubsystem(Subsystem):
-    # Variable Type Declaration
-    value:float = 0.0
-    system:int = None
-
-    def __init__(self, sysId:int) -> None:
-        self.system = sysId
-        self.value = 0.0
+    def __init__(self, value1:int) -> None:
+        """
+        Initialize Subsystem
+        Called when the subsystem is created
+        """
+        self.value1 = value1
+        self.value2 = 0.0
 
     def periodic(self) -> None:
         # Logging: Write Current Subsystem State
@@ -27,10 +27,10 @@ class ExampleSubsystem(Subsystem):
         FalconLogger.logOutput( "/ExampleSubsystem/setpoint", self.getSetpoint() )
 
     def run(self) -> None:
-        pass
+        ... # apply motor controls
 
     def stop(self) -> None:
-        pass
+        ... # force motor stop behavior
 
     def setSetpoint(self, value:float) -> None:
         """
@@ -38,13 +38,16 @@ class ExampleSubsystem(Subsystem):
         NOTE: in a real subsystem, try to use a specific term like 'setSpeed' or 'setDesiredPosition', 'setSetPosition' would also be acceptable, but is less readable
         - make sure to use 'Desired' or 'Set' when using closed-loop control to avoid confusion
         """
-        self.value = value
+        self.value2 = value
 
     def getSetpoint(self) -> float:
         """
         Get Desired State value
         """
-        return self.value
+        return self.value2
     
     def atSetpoint(self) -> bool:
+        """
+        Get whether or not the subsystem is at it's setpoint
+        """
         return False

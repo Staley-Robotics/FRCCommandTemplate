@@ -128,8 +128,10 @@ class FalconLogger:
     
     @classmethod
     def addLoggedObject(self, key:str, value:TalonFX | SparkMax) -> None:
-        '''
-        Add a new object to have its inputs automatically logged, only needs to be called once
-        '''
-        # I dont feel like deduplicating so be careful, ig
+        """
+        Add a new object to have its inputs automatically logged
+        This function only needs to be called on an object once
+        """
+        # I dont feel like deduplicating, but its not super risky, so just fix that later
+        if type(value) not in {TalonFX, SparkMax}: raise TypeError(f"Object '{value}' of type '{type(value)}' is not supported as a loggedObject in FalconLogger")
         self.__loggedObjects.append(LoggedObject(key, value))

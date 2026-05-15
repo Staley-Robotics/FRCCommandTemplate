@@ -2,12 +2,14 @@
 robotpy-installer==2026.0.1
 
 ### RobotPy
-robotpy==2026.1.1
+robotpy==2026.2.1
 robotpy[commands2]
-phoenix6==26.1.0 # robotpy[phoenix6]
-robotpy-rev==2026.0.0 # robotpy[rev]
-robotpy-pathplannerlib==2026.1.1 # robotpy[pathplannerlib]
 
-# phoenix6==25.0.0b4
-# robotpy-pathplannerlib==2025.0.0b6
-# robotpy-rev==2025.0.0b4
+## Other Python Libraries
+phoenix6==26.1.0
+robotpy-rev==2026.0.0
+robotpy-pathplannerlib==2026.1.1
+
+# This is required for running 'robotpy sync' on nkc macs
+# `platform_system=="Darwin"` means this will only be installed if the computer is a mac
+certifi; platform_system=="Darwin"
